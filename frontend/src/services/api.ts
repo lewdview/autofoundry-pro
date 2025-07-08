@@ -1,7 +1,7 @@
 import { AppError, NetworkError, TimeoutError } from '../types/errors';
 import { ErrorHandler } from '../utils/errorHandler';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
@@ -149,7 +149,22 @@ class ApiService {
     return this.request('/api/automation/demo');
   }
 
-  // Two-Question Automation
+  // Start Automation (matches backend /api/automation/start)
+  async startAutomation(data: {
+    businessIdea?: string;
+    isLucky?: boolean;
+  }) {
+    if (!data.isLucky && !data.businessIdea?.trim()) {
+      throw new AppError('Business idea is required when not feeling lucky', 400, 'VALIDATION_ERROR');
+    }
+
+    return this.request('/api/automation/start', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Legacy method for compatibility
   async startTwoQuestionAutomation(data: {
     businessIdea?: string;
     feelingLucky: boolean;
@@ -157,15 +172,10 @@ class ApiService {
     creditsUsed: number;
     stages?: string[];
   }) {
-    this.validateRequired(data, ['feelingLucky', 'automationType', 'creditsUsed']);
-    
-    if (!data.feelingLucky && !data.businessIdea?.trim()) {
-      throw new AppError('Business idea is required when not feeling lucky', 400, 'VALIDATION_ERROR');
-    }
-
-    return this.request('/api/automation/two-question-start', {
-      method: 'POST',
-      body: JSON.stringify(data),
+    // Convert legacy data format to new format
+    return this.startAutomation({
+      businessIdea: data.businessIdea,
+      isLucky: data.feelingLucky
     });
   }
 
@@ -173,7 +183,23 @@ class ApiService {
     if (!sessionId?.trim()) {
       throw new AppError('Session ID is required', 400, 'VALIDATION_ERROR');
     }
-    return this.request(`/api/automation/session/${sessionId}`);
+    return this.request(`/api/automation/status/${sessionId}`);
+  }
+
+  async getAutomationResults(sessionId: string) {
+    if (!sessionId?.trim()) {
+      throw new AppError('Session ID is required', 400, 'VALIDATION_ERROR');
+    }
+    return this.request(`/api/automation/results/${sessionId}`);
+  }
+
+  async cancelAutomationSession(sessionId: string) {
+    if (!sessionId?.trim()) {
+      throw new AppError('Session ID is required', 400, 'VALIDATION_ERROR');
+    }
+    return this.request(`/api/automation/cancel/${sessionId}`, {
+      method: 'POST'
+    });
   }
 
   // Server-Sent Events with error handling
