@@ -20,6 +20,12 @@ AutoFoundry PRO is the world's first AI-powered end-to-end business automation p
 - **Privacy-First**: Optional local AI processing
 - **Unlimited Scale**: No per-request costs or usage limits
 
+### 📊 **Enterprise Database Integration**
+- **MongoDB Powered**: Production-ready database with session persistence
+- **Real-time Processing**: Live automation tracking with Server-Sent Events
+- **Concurrent Safety**: Anti-collision session management
+- **Auto-cleanup**: Intelligent data lifecycle management
+
 ### 💰 **Strategic Pricing Tiers**
 - **Startup Explorer**: $199/month (100 credits, 5 automations)
 - **Business Builder**: $499/month (300 credits, 15 automations) - *Most Popular*
@@ -31,13 +37,19 @@ AutoFoundry PRO is the world's first AI-powered end-to-end business automation p
 ```
 AutoFoundry PRO/
 ├── backend/           # Node.js + Express API server
-│   ├── services/      # Core automation services
+│   ├── services/      # Core automation services (Enhanced HTML parsing)
 │   ├── routes/        # API endpoints
+│   ├── models/        # MongoDB data models
+│   ├── config/        # Database configuration
 │   └── free AI        # Proprietary AI system
 ├── frontend/          # React + TypeScript + Tailwind
 │   ├── components/    # UI components
 │   ├── pages/         # Application pages
 │   └── glass UI       # Modern glass morphism design ✅ WORKING
+├── database/          # MongoDB integration
+│   ├── sessions       # Automation session storage
+│   ├── analytics      # Performance metrics
+│   └── persistence    # Data lifecycle management
 └── documentation/     # Setup guides and strategies
 ```
 
@@ -47,6 +59,7 @@ AutoFoundry PRO/
 - Node.js 18+ 
 - npm 9+
 - Git
+- MongoDB 6.0+ (Community Edition)
 
 ### **Installation**
 
@@ -54,6 +67,9 @@ AutoFoundry PRO/
 # Clone the repository
 git clone <repository-url>
 cd autofoundry
+
+# Install and start MongoDB (macOS)
+brew services start mongodb-community
 
 # Install backend dependencies
 cd backend
@@ -91,6 +107,13 @@ NODE_ENV=development
 PORT=3000
 JWT_SECRET=your-secret-key-here
 
+# MongoDB Configuration
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_DATABASE=autofoundry_pro
+# MONGODB_USERNAME=admin (optional)
+# MONGODB_PASSWORD=password (optional)
+
 # Optional: For enhanced AI capabilities
 HUGGINGFACE_API_KEY=your-hf-token
 OPENAI_API_KEY=your-openai-key (not required)
@@ -104,10 +127,13 @@ OPENAI_API_KEY=your-openai-key (not required)
 - `GET /api/auth/pricing` - Get pricing tiers
 - `POST /api/auth/demo-register` - Quick demo accounts
 
+### **System Health**
+- `GET /health` - System health check with database status
+
 ### **Automation**
 - `POST /api/automation/two-question-start` - Start automation
 - `GET /api/automation/session/:id` - Get session status
-- `GET /api/automation/stream/:id` - Real-time updates
+- `GET /api/automation/stream/:id` - Real-time updates (Server-Sent Events)
 
 ### **Business Services**
 - `POST /api/niche/analyze` - Market research
@@ -151,7 +177,11 @@ OPENAI_API_KEY=your-openai-key (not required)
 ## 📈 **Scaling & Performance**
 
 - **Horizontal Scaling**: Microservices architecture
-- **Database**: MongoDB (production) / In-memory (development)
+- **Database**: MongoDB with automated session management
+- **Concurrent Safety**: Anti-collision session saves
+- **Real-time Updates**: Server-Sent Events for live progress
+- **Data Persistence**: Session history and analytics
+- **Auto-cleanup**: 30-day retention with automatic purge
 - **CDN Ready**: Optimized for global distribution
 - **API Rate Limiting**: Built-in protection
 
