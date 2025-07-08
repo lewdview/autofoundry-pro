@@ -6,11 +6,10 @@ const connectDB = async () => {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/autofoundry';
     
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      dbName: 'autofoundry' // Ensure we use the autofoundry database
     };
 
     const conn = await mongoose.connect(mongoURI, options);

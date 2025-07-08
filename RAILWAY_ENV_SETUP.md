@@ -24,10 +24,12 @@ GROQ_API_KEY=your_groq_api_key_here
 
 > **Note**: Replace `your_groq_api_key_here` with your actual Groq API key starting with `gsk_`
 
-#### Database (if you want persistent storage):
+#### MongoDB Database (REQUIRED for persistent storage):
 ```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/autofoundry
+MONGODB_URI=your_mongodb_connection_string_here
 ```
+
+✅ **Connection Tested Successfully** - Database name: `autofoundry`
 
 ### 3. Click "Deploy" to Apply Changes
 
