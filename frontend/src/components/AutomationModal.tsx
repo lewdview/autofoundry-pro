@@ -180,21 +180,35 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
     if (!sessionId) return;
 
     try {
+      console.log('Fetching session data for:', sessionId);
       const response = await apiService.getSessionStatus(sessionId);
-      if (response.success) {
+      console.log('Session data response:', response);
+      
+      if (response.success && response.session) {
         const sessionWithDefaults = {
-          ...response.session,
+          id: response.session.id || sessionId,
+          status: response.session.status || 'running',
+          progress: response.session.progress || 0,
+          currentStage: response.session.currentStage || 1,
+          results: response.session.results || {},
           logs: response.session.logs || [],
           apiCalls: response.session.apiCalls || generateMockApiCalls(
             response.session.currentStage || 1, 
             response.session.progress || 0
           ),
-          startTime: response.session.startTime || new Date().toISOString()
+          startTime: response.session.startTime || new Date().toISOString(),
+          estimatedCompletionTime: response.session.estimatedCompletionTime
         };
+        console.log('Setting session data:', sessionWithDefaults);
         setSessionData(sessionWithDefaults);
+        setIsLoading(false);
+      } else {
+        console.error('Invalid session response:', response);
+        setError('Invalid session data received');
         setIsLoading(false);
       }
     } catch (err: any) {
+      console.error('Error fetching session data:', err);
       setError(err.message || 'Failed to fetch session data');
       setIsLoading(false);
     }

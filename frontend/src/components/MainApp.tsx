@@ -29,10 +29,18 @@ const MainApp: React.FC = () => {
     
     try {
       // Call the real backend API
+      console.log('Making API call to start automation...');
       const response = await apiService.startTwoQuestionAutomation(data);
+      console.log('API response received:', response);
       
       if (response.success || response.sessionId) {
         const sessionId = response.sessionId || response.session_id;
+        console.log('Session ID extracted:', sessionId);
+        
+        if (!sessionId) {
+          throw new Error('No session ID received from server');
+        }
+        
         setCurrentSessionId(sessionId);
         setShowAutomationModal(true);
         setActiveTab('dashboard');
@@ -45,9 +53,11 @@ const MainApp: React.FC = () => {
           progress: 0,
           estimatedTime: response.estimatedTime || 3600
         });
+        
+        console.log('Automation modal should now be visible');
       } else {
         console.error('Failed to start automation:', response);
-        alert('Failed to start automation. Please try again.');
+        alert('Failed to start automation: ' + (response.message || 'Unknown error'));
       }
     } catch (error: any) {
       console.error('Error starting automation:', error);
@@ -160,7 +170,7 @@ const MainApp: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
                 {user?.businessName || 'AutoFoundry PRO'}
-                <span className="bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent ml-2">Platform</span>
+                <span className="bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent ml-2">DEMO</span>
               </h1>
               <div className="flex items-center space-x-3">
                 <p className="text-gray-600">
