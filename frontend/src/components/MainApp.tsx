@@ -31,17 +31,19 @@ const MainApp: React.FC = () => {
       // Call the real backend API
       const response = await apiService.startTwoQuestionAutomation(data);
       
-      if (response.success) {
-        setCurrentSessionId(response.sessionId);
+      if (response.success || response.sessionId) {
+        const sessionId = response.sessionId || response.session_id;
+        setCurrentSessionId(sessionId);
         setShowAutomationModal(true);
         setActiveTab('dashboard');
         
         // Set basic session info for the dashboard
         setSession({
-          sessionId: response.sessionId,
+          sessionId: sessionId,
           status: 'running',
           currentStage: 1,
-          estimatedTime: response.estimatedTime
+          progress: 0,
+          estimatedTime: response.estimatedTime || 3600
         });
       } else {
         console.error('Failed to start automation:', response);

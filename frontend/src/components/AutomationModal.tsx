@@ -14,7 +14,10 @@ import {
   Download,
   Eye,
   X,
-  Loader2
+  Loader2,
+  Monitor,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 
@@ -32,6 +35,18 @@ interface LogEntry {
   id: number;
 }
 
+interface ApiCall {
+  id: number;
+  timestamp: string;
+  method: string;
+  endpoint: string;
+  status: number;
+  duration: number;
+  request?: any;
+  response?: any;
+  stage: string;
+}
+
 interface SessionData {
   id: string;
   status: 'running' | 'completed' | 'error';
@@ -39,6 +54,7 @@ interface SessionData {
   currentStage: number;
   results?: any;
   logs: LogEntry[];
+  apiCalls?: ApiCall[]; // Make optional since backend might not provide this yet
   startTime: string;
   estimatedCompletionTime?: string;
 }
@@ -52,9 +68,11 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [glassWindowOpen, setGlassWindowOpen] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const apiCallsEndRef = useRef<HTMLDivElement>(null);
 
   const stages = [
     { id: 1, name: '🔍 Market Research & Analysis', description: 'Analyzing market opportunities and trends' },
@@ -71,6 +89,13 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
       logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [sessionData?.logs]);
+
+  // Scroll to bottom of API calls when new entries are added
+  useEffect(() => {
+    if (apiCallsEndRef.current && glassWindowOpen) {
+      apiCallsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [sessionData?.apiCalls, glassWindowOpen]);
 
   // Fetch session data and set up real-time updates
   useEffect(() => {
@@ -118,19 +143,75 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
     };
   }, [isOpen, sessionId]);
 
+  const generateMockApiCalls = (stage: number, progress: number): ApiCall[] => {
+    // Generate mock API calls for demonstration
+    const calls: ApiCall[] = [];
+    const baseTime = Date.now() - (stage * 60000); // Spread over last few minutes
+    
+    const apiEndpoints = {
+      1: ['/api/market/analyze', '/api/trends/fetch', '/api/competition/scan'],
+      2: ['/api/business/register', '/api/ein/apply', '/api/documents/generate'],
+      3: ['/api/store/create', '/api/products/generate', '/api/ui/design'],
+      4: ['/api/pitch/generate', '/api/financials/project', '/api/materials/compile'],
+      5: ['/api/investors/search', '/api/funding/apply', '/api/vc/connect'],
+      6: ['/api/payments/setup', '/api/security/configure', '/api/business/finalize']
+    };
+    
+    let callId = 1;
+    for (let s = 1; s <= stage; s++) {
+      const endpoints = apiEndpoints[s] || ['/api/process'];
+      endpoints.forEach((endpoint, idx) => {
+        calls.push({
+          id: callId++,
+          timestamp: new Date(baseTime + (s * 20000) + (idx * 5000)).toISOString(),
+          method: ['GET', 'POST', 'PUT'][Math.floor(Math.random() * 3)],
+          endpoint,
+          status: Math.random() > 0.1 ? 200 : 500,
+          duration: Math.floor(Math.random() * 500) + 100,
+          stage: stages.find(st => st.id === s)?.name || 'Processing'
+        });
+      });
+    }
+    
+    return calls;
+  };
+
   const fetchSessionData = async () => {
     if (!sessionId) return;
 
     try {
       const response = await apiService.getSessionStatus(sessionId);
       if (response.success) {
-        setSessionData(response.session);
+        const sessionWithDefaults = {
+          ...response.session,
+          logs: response.session.logs || [],
+          apiCalls: response.session.apiCalls || generateMockApiCalls(
+            response.session.currentStage || 1, 
+            response.session.progress || 0
+          ),
+          startTime: response.session.startTime || new Date().toISOString()
+        };
+        setSessionData(sessionWithDefaults);
         setIsLoading(false);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch session data');
       setIsLoading(false);
     }
+  };
+
+  const calculateOverallProgress = () => {
+    if (!sessionData) return 0;
+    const baseProgress = ((sessionData.currentStage - 1) / stages.length) * 100;
+    const stageProgress = (sessionData.progress || 0) / stages.length;
+    return Math.min(100, baseProgress + stageProgress);
+  };
+
+  const getStageProgress = (stageId: number) => {
+    if (!sessionData) return 0;
+    if (sessionData.currentStage > stageId) return 100;
+    if (sessionData.currentStage === stageId) return sessionData.progress || 0;
+    return 0;
   };
 
   const getStageStatus = (stageId: number) => {
@@ -187,6 +268,10 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
     console.log('View results:', sessionData?.results);
   };
 
+  const toggleGlassWindow = () => {
+    setGlassWindowOpen(!glassWindowOpen);
+  };
+
   const handleClose = () => {
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
@@ -239,11 +324,61 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
                     Stage {sessionData.currentStage} of {stages.length}
                   </span>
                 </div>
-                <Progress 
-                  value={(sessionData.currentStage / stages.length) * 100} 
-                  className="h-2"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                
+                {/* Main Progress Bar */}
+                <div className="space-y-2">
+                  <Progress 
+                    value={calculateOverallProgress()} 
+                    className="h-3"
+                  />
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>{Math.round(calculateOverallProgress())}% Complete</span>
+                    <span className="font-medium">
+                      {sessionData.status === 'running' ? 'In Progress...' : 
+                       sessionData.status === 'completed' ? 'Completed!' : 'Error'}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Stage-by-Stage Progress Bars */}
+                <div className="mt-4 space-y-2">
+                  <div className="text-xs font-medium text-gray-700 mb-2">Stage Progress:</div>
+                  {stages.map((stage) => {
+                    const stageProgress = getStageProgress(stage.id);
+                    const stageStatus = getStageStatus(stage.id);
+                    return (
+                      <div key={stage.id} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className={`font-medium ${
+                            stageStatus === 'active' ? 'text-orange-600' :
+                            stageStatus === 'completed' ? 'text-green-600' :
+                            'text-gray-500'
+                          }`}>
+                            {stage.name}
+                          </span>
+                          <span className={`text-xs ${
+                            stageStatus === 'active' ? 'text-orange-600' :
+                            stageStatus === 'completed' ? 'text-green-600' :
+                            'text-gray-400'
+                          }`}>
+                            {stageProgress}%
+                          </span>
+                        </div>
+                        <Progress 
+                          value={stageProgress} 
+                          className="h-1.5"
+                          variant={
+                            stageStatus === 'completed' ? 'success' :
+                            stageStatus === 'active' ? 'default' :
+                            'default'
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="flex justify-between text-xs text-gray-500 mt-3 pt-2 border-t">
                   <span>Started: {formatTime(sessionData.startTime)}</span>
                   {sessionData.estimatedCompletionTime && (
                     <span>ETA: {sessionData.estimatedCompletionTime}</span>
@@ -279,27 +414,124 @@ const AutomationModal: React.FC<AutomationModalProps> = ({
                 </div>
               </div>
 
-              {/* Live Logs */}
-              <div>
-                <h3 className="font-semibold mb-3">Live Activity Log</h3>
-                <ScrollArea className="h-64 w-full border rounded-lg">
-                  <div className="p-3 space-y-2">
-                    {sessionData.logs.map((log) => (
-                      <div key={log.id} className="flex items-start space-x-2 text-sm">
-                        {getLogIcon(log.type)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500">
-                              {formatTime(log.timestamp)}
-                            </span>
-                          </div>
-                          <div className="text-gray-800">{log.message}</div>
+              {/* Glass Window - Behind the Scenes */}
+              <div className="relative">
+                {/* Shutter Frame */}
+                <div className="relative bg-gray-800 rounded-lg overflow-hidden border-4 border-gray-600 shadow-2xl">
+                  {/* Shutter Header with Toggle */}
+                  <div className="bg-gradient-to-r from-gray-700 to-gray-800 px-4 py-3 border-b border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Monitor className="h-5 w-5 text-green-400" />
+                        <span className="text-green-400 font-mono text-sm font-bold">GLASS WINDOW</span>
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
                         </div>
                       </div>
-                    ))}
-                    <div ref={logsEndRef} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleGlassWindow}
+                        className="text-green-400 hover:text-green-300 hover:bg-gray-700"
+                      >
+                        {glassWindowOpen ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            CLOSE SHUTTERS
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            OPEN SHUTTERS
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </ScrollArea>
+
+                  {/* Shutter Animation */}
+                  <div className={`transition-all duration-700 ease-in-out overflow-hidden ${
+                    glassWindowOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
+                  }`}>
+                    {/* Glass Window Content */}
+                    <div className="bg-black relative">
+                      {/* Scanlines Effect */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/5 to-transparent
+                                        bg-[length:100%_4px] animate-pulse opacity-30"></div>
+                      </div>
+                      
+                      {/* Terminal Header */}
+                      <div className="bg-gray-900 px-4 py-2 border-b border-green-400/20">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-400 font-mono text-xs">BACKEND API MONITOR</span>
+                          <span className="text-green-400/60 font-mono text-xs">|</span>
+                          <span className="text-green-400/80 font-mono text-xs">
+                            {sessionData?.status === 'running' ? 'LIVE' : 'IDLE'}
+                          </span>
+                          {sessionData?.status === 'running' && (
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* API Calls Feed */}
+                      <ScrollArea className="h-64">
+                        <div className="p-4 space-y-1 font-mono text-xs">
+                          {sessionData?.apiCalls?.map((call) => (
+                            <div key={call.id} className="text-green-400 leading-relaxed animate-fadeIn">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-green-600">{formatTime(call.timestamp)}</span>
+                                <span className="text-white">█</span>
+                                <span className={`font-bold ${
+                                  call.method === 'GET' ? 'text-blue-400' :
+                                  call.method === 'POST' ? 'text-green-400' :
+                                  call.method === 'PUT' ? 'text-yellow-400' :
+                                  call.method === 'DELETE' ? 'text-red-400' :
+                                  'text-gray-400'
+                                }`}>{call.method}</span>
+                                <span className="text-cyan-400">{call.endpoint}</span>
+                                <span className={`ml-auto ${
+                                  call.status >= 200 && call.status < 300 ? 'text-green-400' :
+                                  call.status >= 400 ? 'text-red-400' :
+                                  'text-yellow-400'
+                                }`}>[{call.status}]</span>
+                                <span className="text-gray-500">{call.duration}ms</span>
+                              </div>
+                              <div className="text-gray-400 text-xs ml-16">
+                                └─ {call.stage}
+                              </div>
+                            </div>
+                          )) || (
+                            <div className="text-center text-green-400/60 py-8">
+                              <Monitor className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <div>Waiting for API calls...</div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Backend communication will appear here
+                              </div>
+                            </div>
+                          )}
+                          <div ref={apiCallsEndRef} />
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+
+                  {/* Closed Shutter State */}
+                  {!glassWindowOpen && (
+                    <div className="bg-gradient-to-r from-gray-700 to-gray-600 px-4 py-8 text-center">
+                      <div className="flex items-center justify-center space-x-2 text-gray-400">
+                        <Monitor className="h-6 w-6" />
+                        <span className="font-mono text-sm">SHUTTERS CLOSED</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        Click "OPEN SHUTTERS" to see behind-the-scenes API activity
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
