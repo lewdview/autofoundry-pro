@@ -6,51 +6,53 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AutomationInterface from './AutomationInterface';
+import AutomationModal from './AutomationModal';
 import Logo from './Logo';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiService } from '@/services/api';
 import { Zap, Target, Rocket, DollarSign, Shield, TrendingUp, Settings, CreditCard, User, LogOut, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [showPricing, setShowPricing] = useState(false);
-  const [session, setSession] = useState(null);
-  const [demoMode, setDemoMode] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [showAutomationModal, setShowAutomationModal] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [automationType, setAutomationType] = useState<string>('');
+  const [isStartingAutomation, setIsStartingAutomation] = useState(false);
 
   const handleStartAutomation = async (data: any) => {
     console.log('Starting automation with:', data);
-    // Create a mock session for demo
-    const mockSession = {
-      sessionId: 'demo_' + Date.now(),
-      status: 'running',
-      progress: 0,
-      currentStage: 1,
-      estimatedTime: 3600
-    };
-    setSession(mockSession);
-    setActiveTab('dashboard');
+    setIsStartingAutomation(true);
+    setAutomationType(data.automationType);
     
-    // Simulate progress for demo
-    simulateProgress();
-  };
-  
-  const simulateProgress = () => {
-    let stage = 1;
-    let progress = 0;
-    
-    const interval = setInterval(() => {
-      progress += 15;
-      if (progress >= 100) {
-        stage++;
-        progress = 0;
-        if (stage > 6) {
-          setSession(prev => prev ? { ...prev, status: 'completed', progress: 100, currentStage: 6 } : null);
-          clearInterval(interval);
-          return;
-        }
+    try {
+      // Call the real backend API
+      const response = await apiService.startTwoQuestionAutomation(data);
+      
+      if (response.success) {
+        setCurrentSessionId(response.sessionId);
+        setShowAutomationModal(true);
+        setActiveTab('dashboard');
+        
+        // Set basic session info for the dashboard
+        setSession({
+          sessionId: response.sessionId,
+          status: 'running',
+          currentStage: 1,
+          estimatedTime: response.estimatedTime
+        });
+      } else {
+        console.error('Failed to start automation:', response);
+        alert('Failed to start automation. Please try again.');
       }
-      setSession(prev => prev ? { ...prev, progress, currentStage: stage } : null);
-    }, 2000);
+    } catch (error: any) {
+      console.error('Error starting automation:', error);
+      alert(error.message || 'Failed to start automation. Please try again.');
+    } finally {
+      setIsStartingAutomation(false);
+    }
   };
 
   const handleRestartAutomation = () => {
@@ -289,7 +291,10 @@ const MainApp: React.FC = () => {
 
           {/* Automation Tab */}
           <TabsContent value="automation">
-            <AutomationInterface onStartAutomation={handleStartAutomation} />
+            <AutomationInterface 
+              onStartAutomation={handleStartAutomation} 
+              isLoading={isStartingAutomation}
+            />
           </TabsContent>
 
           {/* Dashboard Tab */}
@@ -428,6 +433,14 @@ const MainApp: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Automation Progress Modal */}
+        <AutomationModal
+          isOpen={showAutomationModal}
+          onClose={() => setShowAutomationModal(false)}
+          sessionId={currentSessionId}
+          automationType={automationType}
+        />
       </div>
     </div>
   );
