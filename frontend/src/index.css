@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 45 100% 96%;
+    --foreground: 210 40% 8%;
+
+    --card: 45 100% 98%;
+    --card-foreground: 210 40% 8%;
+
+    --popover: 45 100% 98%;
+    --popover-foreground: 210 40% 8%;
+
+    --primary: 25 95% 53%;
+    --primary-foreground: 45 100% 98%;
+
+    --secondary: 45 100% 92%;
+    --secondary-foreground: 210 40% 8%;
+
+    --muted: 45 100% 92%;
+    --muted-foreground: 210 20% 46%;
+
+    --accent: 195 100% 85%;
+    --accent-foreground: 210 40% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 98%;
+
+    --border: 45 100% 88%;
+    --input: 45 100% 88%;
+    --ring: 25 95% 53%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 45 100% 94%;
+    --sidebar-foreground: 210 40% 8%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 45 100% 98%;
+    --sidebar-accent: 195 100% 85%;
+    --sidebar-accent-foreground: 210 40% 8%;
+    --sidebar-border: 45 100% 88%;
+    --sidebar-ring: 25 95% 53%;
+  }
+
+  .dark {
+    --background: 210 40% 8%;
+    --foreground: 45 100% 96%;
+
+    --card: 210 40% 12%;
+    --card-foreground: 45 100% 96%;
+
+    --popover: 210 40% 12%;
+    --popover-foreground: 45 100% 96%;
+
+    --primary: 25 95% 53%;
+    --primary-foreground: 210 40% 8%;
+
+    --secondary: 210 40% 16%;
+    --secondary-foreground: 45 100% 96%;
+
+    --muted: 210 40% 16%;
+    --muted-foreground: 45 60% 65%;
+
+    --accent: 195 100% 25%;
+    --accent-foreground: 45 100% 96%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 45 100% 96%;
+
+    --border: 210 40% 16%;
+    --input: 210 40% 16%;
+    --ring: 25 95% 53%;
+
+    --sidebar-background: 210 40% 12%;
+    --sidebar-foreground: 45 100% 96%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 210 40% 8%;
+    --sidebar-accent: 195 100% 25%;
+    --sidebar-accent-foreground: 45 100% 96%;
+    --sidebar-border: 210 40% 16%;
+    --sidebar-ring: 25 95% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-yellow-50 via-orange-50 to-blue-50 text-foreground font-sans;
+  }
+
+  pre, code {
+    @apply font-mono;
+  }
+}
+
+.glass-effect {
+  /* Enhanced glass morphism with better visibility */
+  @apply backdrop-blur-md bg-white/20 border border-white/30 shadow-xl;
+  
+  /* Stronger glass effect with multiple layers */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.25) 0%, 
+    rgba(255, 255, 255, 0.15) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  
+  /* Ensure backdrop filter is applied */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  
+  /* Add subtle border enhancement */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-effect:hover {
+  /* More pronounced hover effect */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.35) 0%, 
+    rgba(255, 255, 255, 0.25) 50%, 
+    rgba(255, 255, 255, 0.2) 100%);
+  
+  box-shadow: 
+    0 12px 40px 0 rgba(31, 38, 135, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  
+  /* Enhanced backdrop blur on hover */
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  
+  /* Smoother transition */
+  transition: all 0.3s ease;
+}
+
+.ember-glow {
+  @apply shadow-lg shadow-orange-500/20;
+}
+
+.glass-window {
+  /* Enhanced glass window effect */
+  @apply backdrop-blur-lg bg-white/10 border border-white/20;
+  
+  /* Stronger window effect with enhanced gradient */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  
+  box-shadow: 
+    0 20px 60px 0 rgba(31, 38, 135, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  
+  /* Ensure backdrop filter is applied with stronger blur */
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  
+  /* Enhanced border */
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cool-blue-accent {
+  @apply bg-gradient-to-r from-blue-400 to-cyan-400;
+}
+
+.warm-gradient {
+  @apply bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400;
+}
+
+.markdown-editor {
+  @apply font-mono text-base leading-relaxed;
+}
+
+.markdown-preview {
+  @apply prose max-w-none prose-orange dark:prose-invert;
+}
+
+.markdown-preview pre {
+  @apply bg-secondary p-4 rounded-md overflow-x-auto;
+}
+
+.markdown-preview code {
+  @apply text-sm font-mono text-primary;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
+  @apply font-sans font-semibold text-foreground;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  @apply my-4 ml-6;
+}
