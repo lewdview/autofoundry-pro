@@ -149,18 +149,28 @@ class ApiService {
     return this.request('/api/automation/demo');
   }
 
-  // Start Automation (matches backend /api/automation/start)
+  // Start Automation (uses Railway backend endpoint)
   async startAutomation(data: {
     businessIdea?: string;
     isLucky?: boolean;
+    automationType?: string;
+    creditsUsed?: number;
   }) {
     if (!data.isLucky && !data.businessIdea?.trim()) {
       throw new AppError('Business idea is required when not feeling lucky', 400, 'VALIDATION_ERROR');
     }
 
-    return this.request('/api/automation/start', {
+    // Convert to Railway backend format
+    const railwayData = {
+      businessIdea: data.businessIdea,
+      feelingLucky: data.isLucky || false,
+      automationType: data.automationType || 'full',
+      creditsUsed: data.creditsUsed || 45
+    };
+
+    return this.request('/api/automation/two-question-start', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(railwayData),
     });
   }
 
@@ -183,7 +193,7 @@ class ApiService {
     if (!sessionId?.trim()) {
       throw new AppError('Session ID is required', 400, 'VALIDATION_ERROR');
     }
-    return this.request(`/api/automation/status/${sessionId}`);
+    return this.request(`/api/automation/session/${sessionId}`);
   }
 
   async getAutomationResults(sessionId: string) {
