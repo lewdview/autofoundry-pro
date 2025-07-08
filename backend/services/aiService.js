@@ -2,16 +2,80 @@ class AIService {
   constructor() {
     this.apiKey = process.env.GROQ_API_KEY;
     this.baseUrl = 'https://api.groq.com/openai/v1';
+    this.model = 'llama3-8b-8192'; // Current working model
   }
 
   async generateMarketAnalysis(businessIdea) {
     try {
-      // Mock AI-generated response to prevent API dependency issues
+      // Use real Groq API if key is available
+      if (this.apiKey) {
+        const realAnalysis = await this.callGroqAPI(businessIdea);
+        if (realAnalysis) {
+          return realAnalysis;
+        }
+      }
+      
+      // Fallback to mock data if API fails or no key
+      console.log('Using mock market analysis data');
       return this.generateMockAnalysis(businessIdea);
       
     } catch (error) {
       console.error('AI analysis failed:', error);
       return this.getFallbackAnalysis(businessIdea);
+    }
+  }
+
+  async callGroqAPI(businessIdea) {
+    try {
+      const axios = require('axios');
+      
+      const prompt = `Analyze the market for this business idea: "${businessIdea}"
+
+Provide a comprehensive market analysis in JSON format with these fields:
+- overview: Market overview and potential (2-3 sentences)
+- targetAudience: Description of target audience (2-3 sentences)
+- marketSize: Market size estimation with numbers if possible (1-2 sentences)
+- keyInsights: Array of 4-5 key market insights as strings
+
+Respond only with valid JSON.`;
+
+      const response = await axios.post(`${this.baseUrl}/chat/completions`, {
+        model: this.model,
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      });
+
+      const content = response.data.choices[0].message.content;
+      
+      // Try to parse JSON response
+      try {
+        const analysis = JSON.parse(content);
+        
+        // Validate required fields
+        if (analysis.overview && analysis.targetAudience && analysis.marketSize && analysis.keyInsights) {
+          return analysis;
+        }
+      } catch (parseError) {
+        console.warn('Failed to parse Groq API response as JSON:', parseError);
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.error('Groq API call failed:', error.message);
+      return null;
     }
   }
 
