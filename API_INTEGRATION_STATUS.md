@@ -3,8 +3,9 @@
 ## 🚀 Live Deployment URLs
 
 ### Frontend (Vercel)
-- **Production**: `https://autofoundry-pro-git-main-lewdview.vercel.app`
+- **Production**: `https://autofoundry-dl1sb06s9-lewdviews-projects.vercel.app`
 - **Status**: Auto-deploying from main branch
+- **Note**: Currently protected by Vercel SSO - needs public access configuration
 
 ### Backend (Railway)  
 - **Production**: `https://autofoundry-pro-production.up.railway.app`

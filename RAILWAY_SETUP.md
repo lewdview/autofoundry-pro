@@ -6,7 +6,7 @@
 ```
 NODE_ENV=production
 PORT=5000
-FRONTEND_URL=https://your-vercel-frontend-url.vercel.app
+FRONTEND_URL=https://autofoundry-dl1sb06s9-lewdviews-projects.vercel.app
 ```
 
 ### Database (Required):
